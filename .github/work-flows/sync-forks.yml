@@ -1,0 +1,31 @@
+name: Sync Forked Repos
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # daily at 03:00 UTC — adjust as you like
+  workflow_dispatch: {}    # lets you trigger it manually from the Actions tab
+
+jobs:
+  sync-forks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync all forked repos with upstream
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
+        run: |
+          set -euo pipefail
+
+          USERNAME=$(gh api user --jq .login)
+          echo "Syncing forks for $USERNAME"
+
+          gh repo list "$USERNAME" --fork --limit 1000 --json name --jq '.[].name' \
+          | while read -r repo; do
+              echo "→ Syncing $USERNAME/$repo"
+              if gh repo sync "$USERNAME/$repo"; then
+                echo "  ✅ synced"
+              else
+                echo "  ⚠️ failed (branch conflicts or diverged history) — skipping"
+              fi
+            done
+
+          echo "Done."
