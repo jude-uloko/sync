@@ -1,3 +1,0 @@
-v 4
-file . "sync_layar.vhd" "649a4448f6e406b2dbc30191b454ba97d5967db9" "20260802204358.564":
-  entity sync_layer at 5( 93) + 0 on 11;
