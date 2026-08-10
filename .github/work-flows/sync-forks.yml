@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Sync all forked repos with upstream
         env:
-          GH_TOKEN: ${{ secrets.SYNC_PATH }}
+          GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           set -euo pipefail
 
