@@ -2,14 +2,14 @@ name: Sync Forked Repos
 
 on:
   schedule:
-    - cron: '0 */1 * * *'  #runs every 1 hours
+    - cron: '0 */1 * * *'   # runs every hour
   workflow_dispatch: {}    # lets you trigger it manually from the Actions tab
 
 jobs:
   sync-forks:
     runs-on: ubuntu-latest
     steps:
-      - name: FOrce sync all forked repos with upstream
+      - name: Sync all forked repos with upstream
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
@@ -20,24 +20,12 @@ jobs:
 
           gh repo list "$USERNAME" --fork --limit 1000 --json name --jq '.[].name' \
           | while read -r repo; do
-              FULL_NAME="$USERNAME/$REPO"
-              echo "n Processing $FULL_NAME"
-
-              #Get every branch that exist in this fork
-              BRANCHES=$(gh api "repos/$FULL_NAME/branches" --paginate --jq '. [].name' 2>/dev/null || echo "")
-
-              if [-z "$BRANCHES"]; then
-                echo " Could not list branches, skiping"
-                continue
+              echo "→ Syncing $USERNAME/$repo"
+              if gh repo sync "$USERNAME/$repo"; then
+                echo "  ✅ synced"
+              else
+                echo "  ⚠️ failed (branch conflicts or diverged history) — skipping"
               fi
-
-              echo "$BRANCHES" | while read -r branch; do
-                echo " 'n Syncing branch '$branch'"
-                if gh repo sync "$FULL_NAME" --branch "$branch" --force; then
-                  echo " Synced"
-                else
-                  echo "skiped (no matching upstream branch, or, sync failed)"
-                fi
-              done
             done
-          echo "Done"
+
+          echo "Done."
