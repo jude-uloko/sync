@@ -29,7 +29,3 @@ jobs:
             done
 
           echo "Done."
-
-I'm presently using that simple script.
-
-Please let's integrate the new release notification from upstream
