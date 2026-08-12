@@ -3,29 +3,88 @@ name: Sync Forked Repos
 on:
   schedule:
     - cron: '0 */1 * * *'   # runs every hour
-  workflow_dispatch: {}    # lets you trigger it manually from the Actions tab
+  workflow_dispatch: {}      # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write   # needed to commit the release-state file back
+  issues: write      # needed to open notification issues
 
 jobs:
   sync-forks:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync all forked repos with upstream
+      - name: Checkout host repo
+        uses: actions/checkout@v4
+
+      - name: Sync all forked repos with upstream, notify on new releases
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           set -euo pipefail
 
           USERNAME=$(gh api user --jq .login)
+          STATE_FILE="releases-state.json"
+
+          if [ ! -f "$STATE_FILE" ]; then
+            echo "{}" > "$STATE_FILE"
+          fi
+
           echo "Syncing forks for $USERNAME"
 
           gh repo list "$USERNAME" --fork --limit 1000 --json name --jq '.[].name' \
           | while read -r repo; do
-              echo "→ Syncing $USERNAME/$repo"
-              if gh repo sync "$USERNAME/$repo"; then
+              FULL_NAME="$USERNAME/$repo"
+              echo "→ Syncing $FULL_NAME"
+
+              if gh repo sync "$FULL_NAME"; then
                 echo "  ✅ synced"
               else
                 echo "  ⚠️ failed (branch conflicts or diverged history) — skipping"
               fi
+
+              # Find the upstream (parent) repo
+              PARENT=$(gh api "repos/$FULL_NAME" --jq '.parent.full_name // empty')
+              if [ -z "$PARENT" ]; then
+                echo "  ℹ️ no upstream found, skipping release check"
+                continue
+              fi
+
+              # Get latest release from upstream (some repos have none)
+              LATEST=$(gh api "repos/$PARENT/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+              if [ -z "$LATEST" ]; then
+                echo "  ℹ️ $PARENT has no releases, skipping"
+                continue
+              fi
+
+              PREV=$(jq -r --arg k "$PARENT" '.[$k] // empty' "$STATE_FILE")
+
+              if [ "$LATEST" != "$PREV" ]; then
+                echo "  🚀 New release detected for $PARENT: $LATEST (was: ${PREV:-none})"
+                TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+                gh issue create \
+                  --title "New release: $PARENT $LATEST" \
+                  --body "**Upstream repo:** $PARENT
+**New version:** $LATEST
+**Detected:** $TIMESTAMP
+**Your fork:** $FULL_NAME"
+
+                jq --arg k "$PARENT" --arg v "$LATEST" '.[$k] = $v' "$STATE_FILE" > tmp.json && mv tmp.json "$STATE_FILE"
+              else
+                echo "  ✓ no new release ($LATEST already known)"
+              fi
             done
 
           echo "Done."
+
+      - name: Commit updated release state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add releases-state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update release state [skip ci]"
+            git push
+          else
+            echo "No state changes to commit"
+          fi
