@@ -16,7 +16,7 @@ jobs:
       - name: Checkout host repo
         uses: actions/checkout@v4
 
-      - name: Sync all forked repos with upstream, notify on new releases
+      - name: Force-sync all branches of every fork, notify on new releases
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
@@ -34,12 +34,22 @@ jobs:
           gh repo list "$USERNAME" --fork --limit 1000 --json name --jq '.[].name' \
           | while read -r repo; do
               FULL_NAME="$USERNAME/$repo"
-              echo "→ Syncing $FULL_NAME"
+              echo "→ Processing $FULL_NAME"
 
-              if gh repo sync "$FULL_NAME"; then
-                echo "  ✅ synced"
+              # Get every branch that exists on this fork
+              BRANCHES=$(gh api "repos/$FULL_NAME/branches" --paginate --jq '.[].name' 2>/dev/null || echo "")
+
+              if [ -z "$BRANCHES" ]; then
+                echo "  ⚠️ could not list branches, skipping sync for this repo"
               else
-                echo "  ⚠️ failed (branch conflicts or diverged history) — skipping"
+                echo "$BRANCHES" | while read -r branch; do
+                  echo "  → Syncing branch '$branch'"
+                  if gh repo sync "$FULL_NAME" --branch "$branch" --force; then
+                    echo "    ✅ synced"
+                  else
+                    echo "    ⚠️ skipped (no matching upstream branch, or sync failed)"
+                  fi
+                done
               fi
 
               # Find the upstream (parent) repo
