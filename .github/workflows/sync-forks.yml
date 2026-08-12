@@ -16,11 +16,18 @@ jobs:
       - name: Checkout host repo
         uses: actions/checkout@v4
 
-      - name: Force-sync all branches of every fork, notify on new releases
+      - name: Force-sync all branches of every fork (except skip list), notify on new releases
         env:
           GH_TOKEN: ${{ secrets.SYNC_PAT }}
         run: |
           set -euo pipefail
+
+          # ── EDIT THIS LIST ──────────────────────────────────────────
+          # Repo names (just the repo name, not owner/repo) to EXCLUDE
+          # from force-sync. These still get release-check notifications,
+          # but their branches are never touched or overwritten.
+          SKIP_REPOS=()
+          # ─────────────────────────────────────────────────────────────
 
           USERNAME=$(gh api user --jq .login)
           STATE_FILE="releases-state.json"
@@ -29,6 +36,16 @@ jobs:
             echo "{}" > "$STATE_FILE"
           fi
 
+          is_skipped() {
+            local repo="$1"
+            for skip in "${SKIP_REPOS[@]}"; do
+              if [ "$skip" == "$repo" ]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
           echo "Syncing forks for $USERNAME"
 
           gh repo list "$USERNAME" --fork --limit 1000 --json name --jq '.[].name' \
@@ -36,20 +53,23 @@ jobs:
               FULL_NAME="$USERNAME/$repo"
               echo "→ Processing $FULL_NAME"
 
-              # Get every branch that exists on this fork
-              BRANCHES=$(gh api "repos/$FULL_NAME/branches" --paginate --jq '.[].name' 2>/dev/null || echo "")
-
-              if [ -z "$BRANCHES" ]; then
-                echo "  ⚠️ could not list branches, skipping sync for this repo"
+              if is_skipped "$repo"; then
+                echo "  🛡️  in skip list — sync skipped, release check will still run"
               else
-                echo "$BRANCHES" | while read -r branch; do
-                  echo "  → Syncing branch '$branch'"
-                  if gh repo sync "$FULL_NAME" --branch "$branch" --force; then
-                    echo "    ✅ synced"
-                  else
-                    echo "    ⚠️ skipped (no matching upstream branch, or sync failed)"
-                  fi
-                done
+                BRANCHES=$(gh api "repos/$FULL_NAME/branches" --paginate --jq '.[].name' 2>/dev/null || echo "")
+
+                if [ -z "$BRANCHES" ]; then
+                  echo "  ⚠️ could not list branches, skipping sync for this repo"
+                else
+                  echo "$BRANCHES" | while read -r branch; do
+                    echo "  → Syncing branch '$branch'"
+                    if gh repo sync "$FULL_NAME" --branch "$branch" --force; then
+                      echo "    ✅ synced"
+                    else
+                      echo "    ⚠️ skipped (no matching upstream branch, or sync failed)"
+                    fi
+                  done
+                fi
               fi
 
               # Find the upstream (parent) repo
