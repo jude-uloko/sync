@@ -64,10 +64,7 @@ jobs:
 
                 gh issue create \
                   --title "New release: $PARENT $LATEST" \
-                  --body "Upstream repo: $PARENT
-New version: $LATEST
-Detected: $TIMESTAMP
-Your fork: $FULL_NAME"
+                  --body "Upstream repo: $PARENT New version: $LATEST Detected: $TIMESTAMP Your fork: $FULL_NAME"
 
                 jq --arg k "$PARENT" --arg v "$LATEST" '.[$k] = $v' "$STATE_FILE" > tmp.json && mv tmp.json "$STATE_FILE"
               else
