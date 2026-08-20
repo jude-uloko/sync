@@ -92,7 +92,10 @@ jobs:
                 echo "  🚀 New release detected for $PARENT: $LATEST (was: ${PREV:-none})"
                 TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-                BODY="**Upstream repo:** $PARENT **New version:** $LATEST **Detected:** $TIMESTAMP **Your fork:** $FULL_NAME"
+                BODY="**Upstream repo:** $PARENT
+**New version:** $LATEST
+**Detected:** $TIMESTAMP
+**Your fork:** $FULL_NAME"
 
                 gh issue create \
                   --title "New release: $PARENT $LATEST" \
