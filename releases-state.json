@@ -5,7 +5,7 @@
   "git/git": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
   "nmap/nmap": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
   "torvalds/linux": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
-  "vitejs/vite": "plugin-legacy@8.2.3",
+  "vitejs/vite": "v8.2.2",
   "keepassxreboot/keepassxc": "2.7.12",
   "VSCodium/vscodium": "1.126.04524",
   "tukaani-project/xz": "v5.8.3",
