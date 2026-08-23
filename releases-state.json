@@ -26,5 +26,6 @@
   "nafiul-afk/nafiul-afk": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
   "ryo-ma/github-profile-trophy": "v1.0",
   "stats-organization/github-readme-stats-action": "v2.0.2",
-  "anuraghazra/github-readme-stats": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}"
+  "anuraghazra/github-readme-stats": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
+  "free-public-apis/apis": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}"
 }
