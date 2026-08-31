@@ -32,5 +32,7 @@
   "Aditya-Pandey-GH/Portfolio": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
   "r0xd4n3t/PingCapture": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
   "Ali-hey-0/Browser-Data-Logger": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
-  "victorolawale77-png/student-management-system": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}"
+  "victorolawale77-png/student-management-system": "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/releases/releases#get-the-latest-release\",\"status\":\"404\"}",
+  "react/react": "v19.2.8",
+  "preactjs/preact": "10.29.8"
 }
